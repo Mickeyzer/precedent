@@ -1,0 +1,25 @@
+{
+  "n": 400,
+  "cand_recall_hs6": 0.7975,
+  "cand_recall_hs4": 0.8075,
+  "methods": [
+    {
+      "method": "nomenclature",
+      "top1_hs2": 44.8,
+      "top1_hs4": 23.5,
+      "top1_hs6": 11.2,
+      "top3_hs2": 54.5,
+      "top3_hs4": 30.2,
+      "top3_hs6": 19.2
+    },
+    {
+      "method": "precedent",
+      "top1_hs2": 53.8,
+      "top1_hs4": 31.8,
+      "top1_hs6": 19.0,
+      "top3_hs2": 74.5,
+      "top3_hs4": 49.2,
+      "top3_hs6": 38.0
+    }
+  ]
+}
