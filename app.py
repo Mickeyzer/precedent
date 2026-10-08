@@ -41,8 +41,17 @@ with tab_try:
         if classify.api_key() is None:
             st.error("GEMINI_API_KEY is not set.")
             st.stop()
+        out, used = None, None
         with st.spinner("Retrieving precedents and candidates, asking Gemini..."):
-            out = classify.classify(product)
+            for model in config.DEMO_MODELS:   # fall back when a model's free daily quota is used up
+                try:
+                    out, used = classify.classify(product, model=model), model
+                    break
+                except classify.DailyQuotaExceeded:
+                    continue
+        if out is None:
+            st.error("Every configured Gemini model is out of free quota for today. Please try again tomorrow.")
+            st.stop()
         row = hs.loc[out["hs6"]]
         code = out["hs6"]
         c1, c2 = st.columns([1, 3])
@@ -57,6 +66,8 @@ with tab_try:
         c2.markdown(f"**Chapter {code[:2]}:** {row['chapter_desc']}  \n**Heading {code[:4]}:** {row['heading_desc']}"
                     f"  \n**Subheading {code}:** {row['sub_desc']}")
         c2.info(out.get("rationale", ""))
+        c2.caption(f"Answered by {used}" + ("" if used == config.GEMINI_MODEL else
+                                            f" (fallback: {config.GEMINI_MODEL} is out of quota today)"))
         if out["alternatives"]:
             st.markdown("**Other plausible codes:** " + ", ".join(
                 f"`{a}` {hs.at[a, 'sub_desc']}" for a in out["alternatives"]))

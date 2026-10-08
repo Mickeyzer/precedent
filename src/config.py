@@ -23,6 +23,8 @@ TOP_K = 20             # nomenclature candidates handed to the LLM
 
 GEMINI_MODEL = "gemini-3.5-flash-lite"   # free tier: 3.5-flash allows only 20 requests/day; 2.5 is closed to new keys
 LLM_CACHE = PROCESSED_DIR / "llm_cache.jsonl"
+# The demo tries these in order and moves on when a model's free daily quota is used up.
+DEMO_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash"]
 LLM_RPM = 14          # free-tier requests per minute
 
 # Routing: auto-accept only when two independent signals agree (chosen on the dev split,

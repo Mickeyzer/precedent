@@ -7,6 +7,7 @@ Tools:
   list_subheadings(heading)   every subheading under a 4-digit heading
   submit_classification(...)  final answer; ends the loop
 """
+import base64
 import hashlib
 import json
 import time
@@ -89,11 +90,11 @@ def _load_cache() -> dict:
     return _load_cache.data
 
 
-def _turn(model: str, history: list[dict], retries: int = 6) -> list[dict]:
+def _turn(model: str, history: list[dict], force_submit: bool = False, retries: int = 6) -> list[dict]:
     """One model turn. history/return use plain dicts so they can be hashed and cached:
     {"role": "user"|"model", "parts": [{"text"}|{"call": {name, args}}|{"result": {name, response}}]}"""
     from google.genai import types
-    key = hashlib.sha256(json.dumps([model, AGENT_SYSTEM, history], sort_keys=True).encode()).hexdigest()
+    key = hashlib.sha256(json.dumps([model, AGENT_SYSTEM, history, force_submit], sort_keys=True).encode()).hexdigest()
     cache = _load_cache()
     if key in cache:
         return cache[key]
@@ -102,10 +103,12 @@ def _turn(model: str, history: list[dict], retries: int = 6) -> list[dict]:
     for msg in history:
         parts = []
         for p in msg["parts"]:
+            # Gemini 3 signs its own turns; the signature must come back with them or tool calls are refused
+            sig = {"thought_signature": base64.b64decode(p["sig"])} if p.get("sig") else {}
             if "text" in p:
-                parts.append(types.Part(text=p["text"]))
+                parts.append(types.Part(text=p["text"], **sig))
             elif "call" in p:
-                parts.append(types.Part(function_call=types.FunctionCall(**p["call"])))
+                parts.append(types.Part(function_call=types.FunctionCall(**p["call"]), **sig))
             else:
                 parts.append(types.Part(function_response=types.FunctionResponse(**p["result"])))
         contents.append(types.Content(role=msg["role"], parts=parts))
@@ -117,7 +120,10 @@ def _turn(model: str, history: list[dict], retries: int = 6) -> list[dict]:
                 model=model, contents=contents,
                 config=types.GenerateContentConfig(
                     system_instruction=AGENT_SYSTEM, temperature=0.0, tools=_tools(),
-                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)))
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                    # last turn: the only call allowed is the answer, so the loop always ends with one
+                    tool_config=types.ToolConfig(function_calling_config=types.FunctionCallingConfig(
+                        mode="ANY", allowed_function_names=["submit_classification"])) if force_submit else None))
             break
         except Exception as e:
             msg = str(e)
@@ -131,10 +137,11 @@ def _turn(model: str, history: list[dict], retries: int = 6) -> list[dict]:
 
     out = []
     for part in (resp.candidates[0].content.parts or []) if resp.candidates and resp.candidates[0].content else []:
+        sig = {"sig": base64.b64encode(part.thought_signature).decode()} if part.thought_signature else {}
         if part.function_call:
-            out.append({"call": {"name": part.function_call.name, "args": dict(part.function_call.args or {})}})
+            out.append({"call": {"name": part.function_call.name, "args": dict(part.function_call.args or {})}} | sig)
         elif part.text:
-            out.append({"text": part.text})
+            out.append({"text": part.text} | sig)
     with open(_cache_path(), "a", encoding="utf-8") as f:
         f.write(json.dumps({"key": key, "value": out}) + "\n")
     cache[key] = out
@@ -146,7 +153,7 @@ def classify_agent(product: str, model: str = config.GEMINI_MODEL) -> dict:
     history = [{"role": "user", "parts": [{"text": build_prompt(product, cand_codes, precs)}]}]
     trace, final = [], None
     for step in range(MAX_STEPS):
-        parts = _turn(model, history)
+        parts = _turn(model, history, force_submit=(step == MAX_STEPS - 1))
         history.append({"role": "model", "parts": parts or [{"text": ""}]})
         calls = [p["call"] for p in parts if "call" in p]
         if not calls:   # answered in text instead of calling submit: nudge once, then give up
