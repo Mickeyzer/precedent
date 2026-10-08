@@ -50,6 +50,10 @@ with tab_try:
         conf = out.get("confidence")
         if conf is not None:
             c1.metric("Model confidence", f"{100 * conf:.0f}%")
+        if out["route"] == "auto":
+            c1.success("Auto-accept: confident and backed by past rulings")
+        else:
+            c1.warning("Send to review: confidence or precedent support is weak")
         c2.markdown(f"**Chapter {code[:2]}:** {row['chapter_desc']}  \n**Heading {code[:4]}:** {row['heading_desc']}"
                     f"  \n**Subheading {code}:** {row['sub_desc']}")
         c2.info(out.get("rationale", ""))
@@ -58,18 +62,22 @@ with tab_try:
                 f"`{a}` {hs.at[a, 'sub_desc']}" for a in out["alternatives"]))
         with st.expander("Precedents used (similar past US Customs rulings)"):
             st.dataframe(pd.DataFrame(out["precedents"])[["ruling", "subject", "hs6", "sim"]]
-                         .rename(columns={"sim": "similarity"}), hide_index=True, use_container_width=True)
+                         .rename(columns={"sim": "similarity"}), hide_index=True, width="stretch")
 
 with tab_eval:
-    summary = sorted(Path(config.RESULTS_DIR).glob("summary_test_gemini*.json"))
-    if summary:
-        s = json.loads(summary[-1].read_text())
+    summary = Path(config.RESULTS_DIR) / config.HEADLINE_SUMMARY
+    if summary.exists():
+        s = json.loads(summary.read_text())
         st.markdown(f"Scored on **{s['n']} real CBP rulings** issued after every ruling in the precedent "
                     "base, so no answer can be looked up. Top-1 = the first code is exactly right.")
         names = {"nomenclature": "Retrieval only (BM25 + embeddings)", "precedent": "Nearest past rulings (k-NN)",
                  "llm_nomen": "Gemini, nomenclature only", "llm_rag": "Gemini + precedents (TariffSense)"}
         t = pd.DataFrame(s["methods"])
         t["method"] = t["method"].map(names)
-        st.dataframe(t.set_index("method"), use_container_width=True)
+        st.dataframe(t.set_index("method"), width="stretch")
+        for fig in ("error_levels.png", "selective_accuracy.png"):
+            path = Path(config.RESULTS_DIR) / "figures" / fig
+            if path.exists():
+                st.image(str(path))
     else:
         st.write("Run `python -m src.evaluate --split test` to produce results.")

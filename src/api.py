@@ -23,6 +23,7 @@ class Response(BaseModel):
     hs6: str
     description: str
     confidence: float | None
+    route: str = Field(description="'auto' = confident and backed by precedent; 'review' = send to a broker")
     rationale: str
     alternatives: list[str]
     precedents: list[Precedent]
@@ -48,7 +49,7 @@ def classify_product(req: Request) -> Response:
     hs = load_hs().set_index("code")
     row = hs.loc[out["hs6"]]
     return Response(hs6=out["hs6"], description=f"{row['heading_desc']} > {row['sub_desc']}",
-                    confidence=out.get("confidence"), rationale=out.get("rationale", ""),
+                    confidence=out.get("confidence"), route=out["route"], rationale=out.get("rationale", ""),
                     alternatives=out["alternatives"], precedents=out["precedents"])
 
 

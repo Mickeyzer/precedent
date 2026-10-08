@@ -61,3 +61,11 @@ def test_prompt_groups_candidates_by_heading():
     p = build_prompt("cotton T-shirt", ["610910", "610990", "620520"], [])
     assert p.count("Heading 6109") == 1 and "Heading 6205" in p
     assert "610990:" in p
+
+
+def test_route_needs_confidence_and_precedent_agreement():
+    from src.classify import route
+    assert route("610910", 0.97, ["610910", "610990"]) == "auto"
+    assert route("610910", 0.97, ["620520"]) == "review"      # confident but no precedent support
+    assert route("610910", 0.80, ["610910"]) == "review"      # precedent support but low confidence
+    assert route("610910", None, ["610910"]) == "review"

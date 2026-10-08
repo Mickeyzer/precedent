@@ -160,4 +160,13 @@ def classify(product: str, use_precedents: bool = True, model: str = config.GEMI
     out["alternatives"] = [a for a in out.get("alternatives", []) if a in valid and a != code][:3]
     out["precedents"] = precs
     out["n_candidates"] = len(cand_codes)
+    out["route"] = route(code, out.get("confidence"), retrieve.precedent_vote(product)[:config.AUTO_VOTE_TOP_N])
     return out
+
+
+def route(code: str, confidence, vote_top: list[str]) -> str:
+    """'auto' when the LLM is confident AND past rulings point the same way; otherwise 'review'.
+    The LLM's own confidence is over-confident on its own (0.85 stated -> ~33% right on dev)."""
+    if confidence is not None and float(confidence) >= config.AUTO_MIN_CONFIDENCE and code in vote_top:
+        return "auto"
+    return "review"

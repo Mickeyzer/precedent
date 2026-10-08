@@ -85,6 +85,16 @@ def main(paths: list[str]) -> None:
             entry["selective"] = sel.to_dict("records")
             entry["accuracy_at_50pct_coverage"] = round(100 * float(sel.loc[sel["coverage"].sub(0.5).abs().idxmin(),
                                                                              "accuracy"]), 1)
+        if m in llm:   # the routing policy from config (chosen on dev), applied to this file
+            auto = df.apply(lambda r: bool(r[m]) and r[m + "_conf"] is not None
+                            and float(r[m + "_conf"]) >= config.AUTO_MIN_CONFIDENCE
+                            and r[m][0] in r["precedent"][:config.AUTO_VOTE_TOP_N], axis=1)
+            ok = df.apply(lambda r: bool(r[m]) and r[m][0] == r["hs6"], axis=1)
+            ok4 = df.apply(lambda r: bool(r[m]) and r[m][0][:4] == r["hs6"][:4], axis=1)
+            entry["routing"] = {"auto_share": round(100 * float(auto.mean()), 1),
+                                "auto_accuracy_hs6": round(100 * float(ok[auto].mean()), 1) if auto.any() else None,
+                                "auto_accuracy_hs4": round(100 * float(ok4[auto].mean()), 1) if auto.any() else None,
+                                "review_accuracy_hs6": round(100 * float(ok[~auto].mean()), 1) if (~auto).any() else None}
         if m == "agent":
             entry["avg_tool_calls"] = round(float(df["agent_tool_calls"].mean()), 2)
             entry["share_using_tools"] = round(100 * float((df["agent_tool_calls"] > 0).mean()), 1)
@@ -119,7 +129,7 @@ def main(paths: list[str]) -> None:
             left += w
     ax.set_yticks(range(len(methods)), [NAMES[m] for m in methods[::-1]])
     ax.set_xlim(0, 100)
-    ax.set_xlabel("Share of test rulings (%)")
+    ax.set_xlabel("Share of rulings (%)")
     ax.spines[["top", "right", "left"]].set_visible(False)
     ax.tick_params(axis="y", length=0)
     ax.legend(ncol=2, frameon=False, loc="lower center", bbox_to_anchor=(0.4, 1.0), fontsize=9)
@@ -152,7 +162,7 @@ def main(paths: list[str]) -> None:
         extra = ""
         if m in llm:
             extra = (f" | wrong-but-in-candidates {e['wrong_but_in_candidates_pct']}%"
-                     f" | acc@50% coverage {e['accuracy_at_50pct_coverage']}%")
+                     f" | acc@50% coverage {e['accuracy_at_50pct_coverage']}% | routing {e['routing']}")
         print(f"{NAMES[m]:28s} {e['levels']}{extra}")
     print("saved", out_dir)
 

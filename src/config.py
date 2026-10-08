@@ -8,6 +8,7 @@ INDEX_DIR = ROOT / "data" / "index"          # embeddings shipped with the app (
 
 HS_CSV = RAW_DIR / "harmonized-system.csv"   # HS 2022 nomenclature (datasets/harmonized-system)
 RULINGS_JSONL = PROCESSED_DIR / "rulings.jsonl"
+HEADLINE_SUMMARY = "summary_test_gemini-3.5-flash-lite_n140.json"   # shown in the demo
 
 CBP_API = "https://rulings.cbp.gov/api"
 N_RULINGS = 500        # most recent classification rulings to collect
@@ -23,3 +24,8 @@ TOP_K = 20             # nomenclature candidates handed to the LLM
 GEMINI_MODEL = "gemini-3.5-flash-lite"   # free tier: 3.5-flash allows only 20 requests/day; 2.5 is closed to new keys
 LLM_CACHE = PROCESSED_DIR / "llm_cache.jsonl"
 LLM_RPM = 14          # free-tier requests per minute
+
+# Routing: auto-accept only when two independent signals agree (chosen on the dev split,
+# see results/analysis.json); everything else goes to a human reviewer.
+AUTO_MIN_CONFIDENCE = 0.95   # Gemini's own confidence
+AUTO_VOTE_TOP_N = 3          # ...and its pick is among the top-N codes of the precedent vote

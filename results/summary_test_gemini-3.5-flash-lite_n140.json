@@ -1,0 +1,43 @@
+{
+  "n": 140,
+  "cand_recall_hs6": 0.7714285714285715,
+  "cand_recall_hs4": 0.7928571428571428,
+  "methods": [
+    {
+      "method": "nomenclature",
+      "top1_hs2": 44.3,
+      "top1_hs4": 24.3,
+      "top1_hs6": 10.0,
+      "top3_hs2": 52.9,
+      "top3_hs4": 28.6,
+      "top3_hs6": 17.9
+    },
+    {
+      "method": "precedent",
+      "top1_hs2": 42.1,
+      "top1_hs4": 27.1,
+      "top1_hs6": 13.6,
+      "top3_hs2": 71.4,
+      "top3_hs4": 46.4,
+      "top3_hs6": 32.9
+    },
+    {
+      "method": "llm_nomen",
+      "top1_hs2": 67.1,
+      "top1_hs4": 46.4,
+      "top1_hs6": 39.3,
+      "top3_hs2": 78.6,
+      "top3_hs4": 58.6,
+      "top3_hs6": 55.7
+    },
+    {
+      "method": "llm_rag",
+      "top1_hs2": 75.0,
+      "top1_hs4": 61.4,
+      "top1_hs6": 55.0,
+      "top3_hs2": 89.3,
+      "top3_hs4": 74.3,
+      "top3_hs6": 72.1
+    }
+  ]
+}
