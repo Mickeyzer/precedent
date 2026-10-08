@@ -1,7 +1,5 @@
 # TariffSense
 
-[![tests](https://github.com/Mickeyzer/tariffsense/actions/workflows/ci.yml/badge.svg)](https://github.com/Mickeyzer/tariffsense/actions/workflows/ci.yml)
-
 **HS code classification with retrieval-augmented generation, scored against real US Customs rulings.**
 
 Every product that crosses a border needs a Harmonized System (HS) code. It decides the duty paid, the
