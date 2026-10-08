@@ -4,7 +4,7 @@
 
 **HS code classification with retrieval-augmented generation, scored against real US Customs rulings.**
 
-**Live demo:** https://precedent.streamlit.app
+**Live demo:** https://precedent-hs.streamlit.app
 
 Every product that crosses a border needs a Harmonized System (HS) code. It decides the duty paid, the
 trade controls that apply and the statistics it is counted in. Brokers pick codes by reading the legal
