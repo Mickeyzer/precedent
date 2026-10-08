@@ -1,0 +1,4 @@
+method,top1_hs2,top1_hs4,top1_hs6,top3_hs2,top3_hs4,top3_hs6
+nomenclature,44.3,24.3,10.0,52.9,28.6,17.9
+precedent,42.1,27.1,13.6,71.4,46.4,32.9
+llm_rag,75.7,61.4,55.0,90.7,75.7,74.3
