@@ -16,7 +16,7 @@ from src import config
 from src.hs import load_hs
 
 SESSION = requests.Session()
-SESSION.headers["User-Agent"] = "tariffsense-research/0.1"
+SESSION.headers["User-Agent"] = "precedent-research/0.1"
 
 # Anything that looks like a tariff number or names a heading/chapter is removed
 # from the query text, so the answer can't leak into it.

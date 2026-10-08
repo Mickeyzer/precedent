@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from src import classify, retrieve
 from src.hs import load_hs
 
-app = FastAPI(title="TariffSense", description="HS 2022 code classification with retrieval-augmented Gemini")
+app = FastAPI(title="Precedent", description="HS 2022 code classification with retrieval-augmented Gemini")
 
 
 class Request(BaseModel):

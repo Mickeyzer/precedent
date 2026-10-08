@@ -9,5 +9,5 @@ google-genai>=1.0
 pydantic>=2.0
 fastapi>=0.110
 uvicorn>=0.29
-streamlit>=1.35
+streamlit>=1.45
 requests>=2.31

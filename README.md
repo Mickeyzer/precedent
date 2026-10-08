@@ -1,14 +1,14 @@
-# TariffSense
+# Precedent
 
-[![tests](https://github.com/Mickeyzer/tariffsense/actions/workflows/ci.yml/badge.svg)](https://github.com/Mickeyzer/tariffsense/actions/workflows/ci.yml)
+[![tests](https://github.com/Mickeyzer/precedent/actions/workflows/ci.yml/badge.svg)](https://github.com/Mickeyzer/precedent/actions/workflows/ci.yml)
 
 **HS code classification with retrieval-augmented generation, scored against real US Customs rulings.**
 
-**Live demo:** https://tariffsense.streamlit.app
+**Live demo:** https://precedent.streamlit.app
 
 Every product that crosses a border needs a Harmonized System (HS) code. It decides the duty paid, the
 trade controls that apply and the statistics it is counted in. Brokers pick codes by reading the legal
-nomenclature and by checking how Customs classified similar goods before. TariffSense does the same:
+nomenclature and by checking how Customs classified similar goods before. Precedent does the same:
 
 1. **Retrieve** candidate codes two ways:
    - from the HS 2022 nomenclature (5,613 subheadings), with hybrid BM25 + dense embeddings
@@ -28,7 +28,7 @@ Scored on **140 held-out CBP rulings** (Aug 7 to Sep 4 2026, 36 HS chapters), wi
 | Nomenclature retrieval only (BM25 + bge, RRF) | 10.0% | 17.9% | 24.3% | 44.3% |
 | Past-ruling k-NN vote | 13.6% | 32.9% | 27.1% | 42.1% |
 | Gemini, nomenclature candidates only | 39.3% | 55.7% | 46.4% | 67.1% |
-| **Gemini + precedents (TariffSense)** | **55.0%** | **72.1%** | **61.4%** | **75.0%** |
+| **Precedent (Gemini + precedents)** | **55.0%** | **72.1%** | **61.4%** | **75.0%** |
 
 ![Where the first answer lands](results/figures/error_levels.png)
 
@@ -120,7 +120,7 @@ python -m src.evaluate --split dev
 python -m src.evaluate --split test
 streamlit run app.py               # demo
 uvicorn src.api:app                # REST API: POST /classify, GET /search, GET /health
-docker build -t tariffsense . && docker run -e GEMINI_API_KEY=... -p 8000:8000 tariffsense
+docker build -t precedent . && docker run -e GEMINI_API_KEY=... -p 8000:8000 precedent
 pytest -q
 ```
 
