@@ -41,3 +41,23 @@ def test_bm25_finds_obvious_heading():
     hs = load_hs()
     top = [hs["code"].iat[i] for i in retrieve.search("coffee, roasted, not decaffeinated", "bm25", 5)]
     assert any(c.startswith("0901") for c in top)
+
+
+def test_agent_list_subheadings_tool():
+    from src.agent import run_tool
+    out = run_tool("list_subheadings", {"heading": "6109"})
+    assert out["heading"] == "6109"
+    assert {"610910", "610990"} <= {s["hs6"] for s in out["subheadings"]}
+    assert "error" in run_tool("list_subheadings", {"heading": "0000"})
+
+
+def test_agent_unknown_tool_is_reported_not_raised():
+    from src.agent import run_tool
+    assert "error" in run_tool("delete_everything", {})
+
+
+def test_prompt_groups_candidates_by_heading():
+    from src.classify import build_prompt
+    p = build_prompt("cotton T-shirt", ["610910", "610990", "620520"], [])
+    assert p.count("Heading 6109") == 1 and "Heading 6205" in p
+    assert "610990:" in p

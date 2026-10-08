@@ -33,13 +33,13 @@ def embedder(name: str = config.EMBED_MODEL):
 
 @lru_cache(maxsize=2)
 def doc_embeddings(name: str = config.EMBED_MODEL) -> np.ndarray:
-    path = config.PROCESSED_DIR / f"hs6_{name.split('/')[-1]}.npy"
+    path = config.INDEX_DIR / f"hs6_{name.split('/')[-1]}.npy"
     if path.exists():
-        return np.load(path)
+        return np.load(path).astype("float32")
     emb = embedder(name).encode(load_hs()["doc"].tolist(), batch_size=64, normalize_embeddings=True,
                                 show_progress_bar=True).astype("float32")
     path.parent.mkdir(parents=True, exist_ok=True)
-    np.save(path, emb)
+    np.save(path, emb.astype("float16"))   # half precision: small enough to ship with the app
     return emb
 
 
@@ -85,15 +85,16 @@ def precedents():
 
 @lru_cache(maxsize=1)
 def precedent_embeddings() -> np.ndarray:
-    path = config.PROCESSED_DIR / f"precedents_{config.EMBED_MODEL.split('/')[-1]}.npy"
+    path = config.INDEX_DIR / f"precedents_{config.EMBED_MODEL.split('/')[-1]}.npy"
     p = precedents()
     if path.exists():
-        emb = np.load(path)
+        emb = np.load(path).astype("float32")
         if len(emb) == len(p):
             return emb
     emb = embedder(config.EMBED_MODEL).encode(p["subject"].tolist(), batch_size=128, normalize_embeddings=True,
                                               show_progress_bar=True).astype("float32")
-    np.save(path, emb)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.save(path, emb.astype("float16"))
     return emb
 
 

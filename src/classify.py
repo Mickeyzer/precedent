@@ -40,12 +40,34 @@ def api_key() -> str | None:
             return winreg.QueryValueEx(k, "GEMINI_API_KEY")[0]
     except Exception:
         pass
+    try:  # Streamlit Community Cloud secrets
+        import streamlit as st
+        if "GEMINI_API_KEY" in st.secrets:
+            return st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        pass
     env = config.ROOT / ".env"
     if env.exists():
         for line in env.read_text().splitlines():
             if line.startswith("GEMINI_API_KEY="):
                 return line.split("=", 1)[1].strip()
     return None
+
+
+class DailyQuotaExceeded(RuntimeError):
+    pass
+
+
+_last_call = 0.0
+
+
+def throttle() -> None:
+    """Space real API calls to stay under the free tier's requests-per-minute limit."""
+    global _last_call
+    wait = 60 / config.LLM_RPM - (time.time() - _last_call)
+    if wait > 0:
+        time.sleep(wait)
+    _last_call = time.time()
 
 
 _client = None
@@ -101,6 +123,7 @@ def ask_llm(prompt: str, model: str = config.GEMINI_MODEL, retries: int = 6) -> 
         return _cache()[key]
     for attempt in range(retries):
         try:
+            throttle()
             resp = client().models.generate_content(
                 model=model, contents=prompt,
                 config=types.GenerateContentConfig(
@@ -111,7 +134,9 @@ def ask_llm(prompt: str, model: str = config.GEMINI_MODEL, retries: int = 6) -> 
             return out
         except Exception as e:
             msg = str(e)
-            if attempt == retries - 1 or not any(s in msg for s in ("429", "503", "500", "RESOURCE_EXHAUSTED", "UNAVAILABLE")):
+            if "PerDay" in msg:   # daily quota: retrying won't help
+                raise DailyQuotaExceeded(msg[:300]) from e
+            if attempt == retries - 1 or not any(s in msg for s in ("429", "503", "500", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "disconnected", "timed out", "Timeout", "Connection")):
                 raise
             time.sleep(min(60, 5 * 2 ** attempt))   # rate limited or overloaded: back off
     raise RuntimeError("unreachable")

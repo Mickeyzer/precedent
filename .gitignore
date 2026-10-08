@@ -1,7 +1,8 @@
 .env
 __pycache__/
 *.pyc
-data/processed/llm_cache.jsonl
 data/processed/*.npy
 results/*.log
 .streamlit/secrets.toml
+results/eval_*.log
+results/eval_*.err.log

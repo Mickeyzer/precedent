@@ -4,6 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
 RESULTS_DIR = ROOT / "results"
+INDEX_DIR = ROOT / "data" / "index"          # embeddings shipped with the app (float16)
 
 HS_CSV = RAW_DIR / "harmonized-system.csv"   # HS 2022 nomenclature (datasets/harmonized-system)
 RULINGS_JSONL = PROCESSED_DIR / "rulings.jsonl"
@@ -19,5 +20,6 @@ PRECEDENTS_JSONL = PROCESSED_DIR / "precedents.jsonl"
 N_PRECEDENTS = 8       # similar past rulings shown to the LLM
 TOP_K = 20             # nomenclature candidates handed to the LLM
 
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.5-flash-lite"   # free tier: 3.5-flash allows only 20 requests/day; 2.5 is closed to new keys
 LLM_CACHE = PROCESSED_DIR / "llm_cache.jsonl"
+LLM_RPM = 14          # free-tier requests per minute
