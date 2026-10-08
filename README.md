@@ -4,6 +4,8 @@
 
 **HS code classification with retrieval-augmented generation, scored against real US Customs rulings.**
 
+**Live demo:** https://tariffsense.streamlit.app
+
 Every product that crosses a border needs a Harmonized System (HS) code. It decides the duty paid, the
 trade controls that apply and the statistics it is counted in. Brokers pick codes by reading the legal
 nomenclature and by checking how Customs classified similar goods before. TariffSense does the same:
@@ -66,9 +68,27 @@ dev suggested. The rule was chosen on 27 examples and overfit them. The API stil
 ### The agent
 
 `src/agent.py` gives Gemini four tools: `search_nomenclature`, `search_precedents`, `list_subheadings` and
-`submit_classification`, with a 5-turn budget. It starts from the same context as the RAG pipeline. It is
-implemented, unit-tested and smoke-tested, but **not benchmarked yet**: the free-tier quota and a memory
-limit stopped the run. `python -m src.evaluate --split test --limit 140 --methods agent` reproduces it.
+`submit_classification`. It starts from the same context as the RAG pipeline and has a 5-turn budget, and the
+last turn may only submit. Agent and single-shot RAG were compared on the **same 100 test rulings with the same
+model** (`gemini-3.1-flash-lite`):
+
+| Method | Top-1, 6-digit | Top-3, 6-digit | Top-1, heading |
+|---|---|---|---|
+| Single-shot RAG | 58.0% | 75.0% | 63.0% |
+| **Agent + tools** | **63.0%** | 69.0% | 67.0% |
+
+- **+5 points top-1:** the agent fixed 6 rulings that RAG got wrong and broke 1. With n = 100 that is not
+  statistically significant (exact McNemar p = 0.125): it is promising, but not proven.
+- **Tools are used selectively:** on 64% of rulings, 1.74 calls on average (precedent search 74, nomenclature
+  search 64, sibling listing 36). On the rulings where it searched, it was right 56.2% of the time against
+  48.4% for RAG on the same rulings.
+- **Top-3 is lower because it lists fewer alternatives** (1.84 codes vs 3.49), not because it ranks worse:
+  `alternatives` is optional in the submit tool, and 35% of its answers had none.
+- **Two bugs found while building it:**
+  - Gemini 3 rejects a multi-turn tool conversation unless each call's `thought_signature` is sent back. The loop
+    now keeps it, base64-encoded in the cache.
+  - The model could spend every turn searching and never answer. The last turn now restricts it to
+    `submit_classification` via `tool_config`.
 
 ### Why only 140 test rulings?
 

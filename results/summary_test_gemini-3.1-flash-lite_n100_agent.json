@@ -1,0 +1,34 @@
+{
+  "n": 100,
+  "cand_recall_hs6": 0.78,
+  "cand_recall_hs4": 0.79,
+  "methods": [
+    {
+      "method": "nomenclature",
+      "top1_hs2": 45.0,
+      "top1_hs4": 26.0,
+      "top1_hs6": 11.0,
+      "top3_hs2": 57.0,
+      "top3_hs4": 32.0,
+      "top3_hs6": 19.0
+    },
+    {
+      "method": "precedent",
+      "top1_hs2": 42.0,
+      "top1_hs4": 25.0,
+      "top1_hs6": 11.0,
+      "top3_hs2": 72.0,
+      "top3_hs4": 44.0,
+      "top3_hs6": 33.0
+    },
+    {
+      "method": "agent",
+      "top1_hs2": 77.0,
+      "top1_hs4": 67.0,
+      "top1_hs6": 63.0,
+      "top3_hs2": 80.0,
+      "top3_hs4": 70.0,
+      "top3_hs6": 69.0
+    }
+  ]
+}
